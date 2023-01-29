@@ -18,8 +18,13 @@ with Session() as s:
 
     course_list = []
     for i in range(len(list)):
-        print(i)
-        if re.search("^https://mescours.modestycouture.com/course/", list[i]):
+        if re.search("^https://mescours.modestycouture.com/course/|^https://mescours.modestycouture.com/module/", list[i]):
             course_list.append(list[i])
 
-    print(course_list)
+    # The fisrt link of the list is: "Reprendre le cours"
+    course_list.remove(course_list[0])
+
+    # Write links in file
+    f = open('links.txt', 'w')
+    for line in range(len(course_list)):
+        f.write(f"{course_list[line]}\n")
