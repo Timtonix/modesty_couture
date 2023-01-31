@@ -10,7 +10,6 @@ def get_credentials():
     return json_file
 
 
-
 def get_course_links():
     with Session() as s:
         site = s.get("https://mescours.modestycouture.com/mon-compte/")
