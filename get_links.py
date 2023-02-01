@@ -1,12 +1,24 @@
 from requests import Session
 from bs4 import BeautifulSoup
 import re
+import os
 import json
 
 
 def get_credentials():
     f = open("login.json")
     json_file = json.load(f)
+
+    with Session() as s:
+        site = s.get("https://mescours.modestycouture.com/mon-compte/").content.decode('utf-8')
+
+        soup = BeautifulSoup(site, "html.parser")
+        input_list = []
+        for input_html in soup.find_all('input'):
+            input_list.append(input_html.get('value'))
+
+        json_file['woocommerce-login-nonce'] = input_list[3]
+        print(json_file)
     return json_file
 
 
@@ -58,22 +70,10 @@ def get_vimeo_links():
 
     with Session() as session:
         session.post("https://mescours.modestycouture.com/mon-compte/", get_credentials())
-        # Now open the first course link if it is a course link
-        first_vimeo_link = course_links[34]
-        course_page = session.get(first_vimeo_link).content.decode('utf-8')
 
-        # create Soup object
-        soup = BeautifulSoup(course_page, "html.parser")
-        list = []
-        for link in soup.find_all('iframe'):
-            list.append(link.get('data-src'))
+        for course in course_links:
+            print(course)
 
-        vimeo_list = []
-        for i in range(len(list)):
-            if re.search("^https://player.vimeo.com/video/",
-                         list[i]):
-                vimeo_list.append(list[i])
-        print(vimeo_list)
 
 
 get_vimeo_links()
