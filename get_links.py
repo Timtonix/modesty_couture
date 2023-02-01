@@ -66,13 +66,28 @@ def get_file_links():
 
 def get_vimeo_links():
     course_links = get_file_links()
-    print(get_credentials())
+    video_file = open("all_courses.json")
+    video_json = json.load(video_file)
+    video_file.close()
 
     with Session() as session:
         session.post("https://mescours.modestycouture.com/mon-compte/", get_credentials())
 
         for course in course_links:
             print(course)
+            if re.search("^https://mescours.modestycouture.com/module/", course):
+                module = session.get(course).content.decode('utf-8')
+                soup = BeautifulSoup(module, "html.parser")
+                h1 = soup.select('h1')[0].text.strip()
+                video_json[h1] = course
+
+        json_objet = json.dumps(video_json)
+
+        with open("all_courses.json", "w") as f:
+            f.write(json_objet)
+            f.close()
+
+        session.close()
 
 
 
