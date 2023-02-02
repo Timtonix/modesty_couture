@@ -66,13 +66,44 @@ def get_file_links():
 
 def get_vimeo_links():
     course_links = get_file_links()
-    print(get_credentials())
+    video_file = open("all_courses.json")
+    video_json = json.load(video_file)
+    video_file.close()
 
     with Session() as session:
         session.post("https://mescours.modestycouture.com/mon-compte/", get_credentials())
 
+        # On crée la variable module pourse savoir ou le cours devra être placé
+        module_title = ""
         for course in course_links:
-            print(course)
+            print(f"Le cours {course} est dans le module {module_title}")
+
+            # Si le lien est un module
+            if re.search("^https://mescours.modestycouture.com/module/", course):
+                module_page = session.get(course).content.decode('utf-8')
+                soup = BeautifulSoup(module_page, "html.parser")
+                module_title = soup.select('h1')[0].text.strip()
+                video_json[module_title] = {"nom du cours": ["vimeo_link"]}
+
+            elif re.search("^https://mescours.modestycouture.com/course/", course):
+                course_page = session.get(course).content.decode('utf-8')
+                soup = BeautifulSoup(course_page, "html.parser")
+                video_json[module_title] = video_json[module_title] | {course: []}
+
+                i = 0
+                for iframe in soup.find_all('iframe'):
+                    print(iframe.get('data-src'))
+                    if re.search('^https://player.vimeo.com/', iframe.get('data-src')):
+                        video_json[module_title][course].append(iframe.get('data-src'))
+                    i += 1
+
+        json_objet = json.dumps(video_json)
+
+        with open("all_courses.json", "w") as f:
+            f.write(json_objet)
+            f.close()
+
+        session.close()
 
 
 
