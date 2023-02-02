@@ -83,13 +83,19 @@ def get_vimeo_links():
                 module_page = session.get(course).content.decode('utf-8')
                 soup = BeautifulSoup(module_page, "html.parser")
                 module_title = soup.select('h1')[0].text.strip()
-                video_json[module_title] = course
+                video_json[module_title] = {"nom du cours": ["vimeo_link"]}
+
             elif re.search("^https://mescours.modestycouture.com/course/", course):
-                print("course")
                 course_page = session.get(course).content.decode('utf-8')
                 soup = BeautifulSoup(course_page, "html.parser")
+                video_json[module_title] = video_json[module_title] | {course: []}
+
+                i = 0
                 for iframe in soup.find_all('iframe'):
                     print(iframe.get('data-src'))
+                    if re.search('^https://player.vimeo.com/', iframe.get('data-src')):
+                        video_json[module_title][course].append(iframe.get('data-src'))
+                    i += 1
 
         json_objet = json.dumps(video_json)
 
