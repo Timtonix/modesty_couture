@@ -73,13 +73,23 @@ def get_vimeo_links():
     with Session() as session:
         session.post("https://mescours.modestycouture.com/mon-compte/", get_credentials())
 
+        # On crée la variable module pourse savoir ou le cours devra être placé
+        module_title = ""
         for course in course_links:
-            print(course)
+            print(f"Le cours {course} est dans le module {module_title}")
+
+            # Si le lien est un module
             if re.search("^https://mescours.modestycouture.com/module/", course):
-                module = session.get(course).content.decode('utf-8')
-                soup = BeautifulSoup(module, "html.parser")
-                h1 = soup.select('h1')[0].text.strip()
-                video_json[h1] = course
+                module_page = session.get(course).content.decode('utf-8')
+                soup = BeautifulSoup(module_page, "html.parser")
+                module_title = soup.select('h1')[0].text.strip()
+                video_json[module_title] = course
+            elif re.search("^https://mescours.modestycouture.com/course/", course):
+                print("course")
+                course_page = session.get(course).content.decode('utf-8')
+                soup = BeautifulSoup(course_page, "html.parser")
+                for iframe in soup.find_all('iframe'):
+                    print(iframe.get('data-src'))
 
         json_objet = json.dumps(video_json)
 
