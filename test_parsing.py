@@ -21,10 +21,41 @@ with requests.Session() as session:
                 if re.search("\.mp4", x[i]):
                     # On découpe à tous les "
                     without_comma = re.split("\"", x[i])
+                    print(without_comma)
                     # Maintenant on ne récupère que le 720p
                     for iterateur in range(len(without_comma)):
                         if re.search("720p", without_comma[iterateur]):
                             print(without_comma)
                             source_link = without_comma[2]
 
-    print(source_link)
+
+def download_video_series(video_links: list):
+    for link in video_links:
+
+        '''iterate through all links in video_links 
+        and download them one by one'''
+
+        # obtain filename by splitting url and getting
+        # last string
+        file_name = "moimeme.mp4"
+
+        print("Downloading file:%s" % file_name)
+
+        # create response object
+        r = requests.get(link, stream=True)
+
+        # download started
+        with open(file_name, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024 * 1024):
+                if chunk:
+                    f.write(chunk)
+
+        print("%s downloaded!\n" % file_name)
+
+    print("All videos downloaded!")
+    return
+
+
+print(type(source_link))
+print(source_link)
+download_video_series([source_link])
