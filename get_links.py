@@ -62,44 +62,93 @@ def get_file_links():
     return links_list
 
 
-
-def get_vimeo_links():
+def download_video():
     course_links = get_file_links()
-    video_file = open("all_courses.json")
-    video_json = json.load(video_file)
-    video_file.close()
 
     with Session() as session:
         session.post("https://mescours.modestycouture.com/mon-compte/", get_credentials())
 
         # On crée la variable module pourse savoir ou le cours devra être placé
-        module_title = ""
         for course in course_links:
-            print(f"Le cours {course} est dans le module {module_title}")
 
             # Si le lien est un module
             if re.search("^https://mescours.modestycouture.com/module/", course):
                 module_page = session.get(course).content.decode('utf-8')
                 soup = BeautifulSoup(module_page, "html.parser")
                 module_title = soup.select('h1')[0].text.strip()
-                video_json[module_title] = {"nom du cours": ["vimeo_link"]}
 
+                # On vérifie si on doit créer un dossier avec le nom du module
+                directory = os.listdir("./video/")
+                if module_title not in directory:
+                    try:
+                        os.mkdir(f"video/{module_title}/")
+                    except OSError as e:
+                        print(e)
+                else:
+                    print(f"Directory {module_title} already exist")
+
+            # Si c'est un cours
             elif re.search("^https://mescours.modestycouture.com/course/", course):
                 course_page = session.get(course).content.decode('utf-8')
                 soup = BeautifulSoup(course_page, "html.parser")
-                video_json[module_title] = video_json[module_title] | {course: []}
-
+                course_title = soup.select('h1')[0].text.strip()
                 i = 0
                 for iframe in soup.find_all('iframe'):
                     print(iframe.get('data-src'))
                     if re.search('^https://player.vimeo.com/', iframe.get('data-src')):
-                        video_json[module_title][course].append(iframe.get('data-src'))
-                    i += 1
 
-        json_objet = json.dumps(video_json)
+                        # D'abord on vérifie si le dossier n'existe pas
+                        directory = os.listdir(f"./video/{module_title}/")
+                        if course_title not in directory:
+                            try:
+                                os.mkdir(f"video/{module_title}/{course_title}/")
+                            except OSError as e:
+                                print(e)
+                        else:
+                            print(f"Directory {course_title} already exist")
 
-        with open("all_courses.json", "w") as f:
-            f.write(json_objet)
-            f.close()
+                        # On récupère le lien source
+                        source_link = get_source_link(iframe.get('data-src'))
+
+                        file_name = f"./video/{module_title}/{course_title}/{i} - {course_title}.mp4"
+                        print("Downloading file:%s" % file_name)
+                        # create response object
+                        r = session.get(source_link, stream=True)
+
+                        # download started
+                        with open(file_name, 'wb') as f:
+                            for chunk in r.iter_content(chunk_size=1024 * 1024):
+                                if chunk:
+                                    f.write(chunk)
+
+                        print("%s downloaded!\n" % file_name)
+                        i += 1
 
         session.close()
+
+
+def get_source_link(vimeo_link):
+    with Session() as session:
+        vimeo = session.get(
+            vimeo_link).content.decode(
+            'utf-8')
+
+        soup = BeautifulSoup(vimeo, "html.parser")
+
+        for script in soup.find_all('script'):
+            if re.search("window.playerConfig", script.text):
+                # On découpe la string si elle a le tag URL
+                x = re.split("url", script.text)
+                for i in range(len(x)):
+                    # Si on a un .mp4 dans la liste
+                    if re.search("\.mp4", x[i]):
+                        # On découpe à tous les "
+                        without_comma = re.split("\"", x[i])
+                        # Maintenant on ne récupère que le 720p
+                        for iterateur in range(len(without_comma)):
+                            if re.search("720p", without_comma[iterateur]):
+                                print(without_comma)
+                                return without_comma[2]
+
+
+download_video()
