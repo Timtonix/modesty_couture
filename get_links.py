@@ -92,37 +92,49 @@ def download_video():
                 course_page = session.get(course).content.decode('utf-8')
                 soup = BeautifulSoup(course_page, "html.parser")
                 course_title = soup.select('h1')[0].text.strip()
-                i = 0
+
+                iterateur_cours_directory = 0
+                course_directory_title = f"{iterateur_cours_directory} - {course_title}"
+                iterateur_video = 0
                 for iframe in soup.find_all('iframe'):
-                    print(iframe.get('data-src'))
                     if re.search('^https://player.vimeo.com/', iframe.get('data-src')):
 
                         # D'abord on vérifie si le dossier n'existe pas
-                        directory = os.listdir(f"./video/{module_title}/")
-                        if course_title not in directory:
+                        directory = os.listdir(f"video/{module_title}/")
+                        if course_directory_title not in directory:
                             try:
-                                os.mkdir(f"video/{module_title}/{course_title}/")
+                                os.mkdir(f"video/{module_title}/{course_directory_title}/")
                             except OSError as e:
                                 print(e)
                         else:
-                            print(f"Directory {course_title} already exist")
+                            print(f"Directory {course_directory_title} already exist")
+
+                        # On rajoute une itération pour le dossier cours
+                        iterateur_cours_directory += 1
 
                         # On récupère le lien source
                         source_link = get_source_link(iframe.get('data-src'))
+                        file_name = f"./video/{module_title}/{course_directory_title}/{iterateur_video} - {course_title}.mp4"
+                        directory = os.listdir(f"video/{module_title}/{course_directory_title}/")
 
-                        file_name = f"./video/{module_title}/{course_title}/{i} - {course_title}.mp4"
-                        print("Downloading file:%s" % file_name)
-                        # create response object
-                        r = session.get(source_link, stream=True)
+                        if f"{iterateur_video} - {course_title}.mp4" not in directory:
 
-                        # download started
-                        with open(file_name, 'wb') as f:
-                            for chunk in r.iter_content(chunk_size=1024 * 1024):
-                                if chunk:
-                                    f.write(chunk)
+                            print("Downloading file:%s" % file_name)
 
-                        print("%s downloaded!\n" % file_name)
-                        i += 1
+                            # create response object
+                            r = session.get(source_link, stream=True)
+
+                            # download started
+                            with open(file_name, 'wb') as f:
+                                for chunk in r.iter_content(chunk_size=1024 * 1024):
+                                    if chunk:
+                                        f.write(chunk)
+                            print("%s downloaded!\n" % file_name)
+
+                        else:
+                            print(f"{iterateur_video} - {course_title}.mp4 already exist")
+
+                        iterateur_video += 1
 
         session.close()
 
@@ -149,6 +161,3 @@ def get_source_link(vimeo_link):
                             if re.search("720p", without_comma[iterateur]):
                                 print(without_comma)
                                 return without_comma[2]
-
-
-download_video()
