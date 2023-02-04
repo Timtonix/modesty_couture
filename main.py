@@ -5,7 +5,8 @@ import json
 parser = argparse.ArgumentParser(description="Modesty Course Installer")
 parser.add_argument("--username", help="Username of Modesty Couture")
 parser.add_argument("--password", help="Password of Modesty Couture")
-parser.add_argument("--destination_directory", help="The destination directory like : course, video...")
+parser.add_argument("--destination_directory", help="The destination directory like : course, video...",
+                    default="video")
 
 args = parser.parse_args()
 
