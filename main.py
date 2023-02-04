@@ -21,4 +21,4 @@ print("Writing all the links in links.txt")
 get_links.get_course_links()
 
 print("DOWNLOADING THE COURSE")
-get_links.download_video()
+get_links.download_video(args.destination_directory)
