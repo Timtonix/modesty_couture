@@ -27,7 +27,6 @@ def get_course_links():
         s.post("https://mescours.modestycouture.com/mon-compte/", get_credentials())
         home_page = s.get("https://mescours.modestycouture.com/espace-membre/formation-modesty-couture-class/").content.decode('utf-8')
         soup = BeautifulSoup(home_page, "html.parser")
-        print(home_page)
         # Get all the links in the page
         list = []
         for link in soup.find_all('a'):
