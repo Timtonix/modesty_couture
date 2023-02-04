@@ -24,8 +24,7 @@ def get_credentials():
 
 def get_course_links():
     with Session() as s:
-        login_crednetials = {"username": "helene.maurice", "password": "LGGmbp2022", "woocommerce-login-nonce": "5686106583", "_wp_http_referer": "/mon-compte/", "login": "Identification"}
-        s.post("https://mescours.modestycouture.com/mon-compte/", login_crednetials)
+        s.post("https://mescours.modestycouture.com/mon-compte/", get_credentials())
         home_page = s.get("https://mescours.modestycouture.com/espace-membre/formation-modesty-couture-class/").content.decode('utf-8')
         soup = BeautifulSoup(home_page, "html.parser")
         print(home_page)
@@ -62,7 +61,7 @@ def get_file_links():
     return links_list
 
 
-def download_video():
+def download_video(video_directory):
     course_links = get_file_links()
 
     with Session() as session:
@@ -78,10 +77,10 @@ def download_video():
                 module_title = soup.select('h1')[0].text.strip()
 
                 # On vérifie si on doit créer un dossier avec le nom du module
-                directory = os.listdir("./video/")
+                directory = os.listdir(f"{video_directory}/")
                 if module_title not in directory:
                     try:
-                        os.mkdir(f"video/{module_title}/")
+                        os.mkdir(f"{video_directory}/{module_title}/")
                     except OSError as e:
                         print(e)
                 else:
@@ -100,10 +99,10 @@ def download_video():
                     if re.search('^https://player.vimeo.com/', iframe.get('data-src')):
 
                         # D'abord on vérifie si le dossier n'existe pas
-                        directory = os.listdir(f"video/{module_title}/")
+                        directory = os.listdir(f"{video_directory}/{module_title}/")
                         if course_directory_title not in directory:
                             try:
-                                os.mkdir(f"video/{module_title}/{course_directory_title}/")
+                                os.mkdir(f"{video_directory}/{module_title}/{course_directory_title}/")
                             except OSError as e:
                                 print(e)
                         else:
