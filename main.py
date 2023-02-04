@@ -17,3 +17,7 @@ with open('login.json', "w") as file:
     file.write(login_object)
 
 print("Writing all the links in links.txt")
+get_links.get_course_links()
+
+print("DOWNLOADING THE COURSE")
+get_links.download_video()

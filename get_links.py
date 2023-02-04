@@ -45,6 +45,7 @@ def get_course_links():
         for line in range(len(course_list)):
             f.write(f"{course_list[line]}\n")
 
+        print("Links have been downloaded")
 
 def get_file_links():
     # Get the links of the file
@@ -115,9 +116,9 @@ def download_video(video_directory):
                         file_name = f"./video/{module_title}/{course_directory_title}/{iterateur_video} - {course_title}.mp4"
                         directory = os.listdir(f"video/{module_title}/{course_directory_title}/")
 
-                        if f"{iterateur_video} - {course_title}.mp4" not in directory:
+                        if f"{course_directory_title}.mp4" not in directory:
 
-                            print("Downloading file:%s" % file_name)
+                            print("Downloading file:%s" % course_directory_title)
 
                             # create response object
                             r = session.get(source_link, stream=True)
@@ -130,7 +131,7 @@ def download_video(video_directory):
                             print("%s downloaded!\n" % file_name)
 
                         else:
-                            print(f"{iterateur_video} - {course_title}.mp4 already exist")
+                            print(f"Course {iterateur_video} - {course_title}.mp4 already exist")
 
                         iterateur_video += 1
 
@@ -157,5 +158,4 @@ def get_source_link(vimeo_link):
                         # Maintenant on ne récupère que le 720p
                         for iterateur in range(len(without_comma)):
                             if re.search("720p", without_comma[iterateur]):
-                                print(without_comma)
                                 return without_comma[2]
