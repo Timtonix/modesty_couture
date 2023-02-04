@@ -113,8 +113,8 @@ def download_video(video_directory):
 
                         # On récupère le lien source
                         source_link = get_source_link(iframe.get('data-src'))
-                        file_name = f"./video/{module_title}/{course_directory_title}/{iterateur_video} - {course_title}.mp4"
-                        directory = os.listdir(f"video/{module_title}/{course_directory_title}/")
+                        file_name = f"./{video_directory}/{module_title}/{course_directory_title}/{iterateur_video} - {course_title}.mp4"
+                        directory = os.listdir(f"{video_directory}/{module_title}/{course_directory_title}/")
 
                         if f"{course_directory_title}.mp4" not in directory:
 
