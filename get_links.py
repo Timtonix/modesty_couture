@@ -48,6 +48,7 @@ def get_course_links():
             f.write(f"{course_list[line]}\n")
 
 
+# TEST comment
 def get_file_links():
     # Get the links of the file
     file_list = []
