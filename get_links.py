@@ -18,7 +18,6 @@ def get_credentials():
             input_list.append(input_html.get('value'))
 
         json_file['woocommerce-login-nonce'] = input_list[3]
-        print(json_file)
     return json_file
 
 
@@ -64,6 +63,10 @@ def get_file_links():
 
 def download_video(video_directory):
     course_links = get_file_links()
+    default_dir = os.listdir("./")
+
+    if video_directory not in default_dir:
+        os.mkdir(video_directory)
 
     with Session() as session:
         session.post("https://mescours.modestycouture.com/mon-compte/", get_credentials())
@@ -73,6 +76,7 @@ def download_video(video_directory):
 
             # Si le lien est un module
             if re.search("^https://mescours.modestycouture.com/module/", course):
+                iterateur_cours_directory = 0
                 module_page = session.get(course).content.decode('utf-8')
                 soup = BeautifulSoup(module_page, "html.parser")
                 module_title = soup.select('h1')[0].text.strip()
@@ -85,19 +89,24 @@ def download_video(video_directory):
                     except OSError as e:
                         print(e)
                 else:
-                    print(f"Directory {module_title} already exist")
+                    print(f"Module {module_title} already exist")
 
             # Si c'est un cours
             elif re.search("^https://mescours.modestycouture.com/course/", course):
+                # On rajoute une itération pour le dossier cours
+                iterateur_cours_directory += 1
+                # On va chercher la page web du cours
                 course_page = session.get(course).content.decode('utf-8')
                 soup = BeautifulSoup(course_page, "html.parser")
                 course_title = soup.select('h1')[0].text.strip()
 
-                iterateur_cours_directory = 0
                 course_directory_title = f"{iterateur_cours_directory} - {course_title}"
                 iterateur_video = 0
                 for iframe in soup.find_all('iframe'):
                     if re.search('^https://player.vimeo.com/', iframe.get('data-src')):
+
+                        iterateur_video += 1
+                        video_title = f"{iterateur_video} - {course_title}.mp4"
 
                         # D'abord on vérifie si le dossier n'existe pas
                         directory = os.listdir(f"{video_directory}/{module_title}/")
@@ -109,15 +118,13 @@ def download_video(video_directory):
                         else:
                             print(f"Directory {course_directory_title} already exist")
 
-                        # On rajoute une itération pour le dossier cours
-                        iterateur_cours_directory += 1
-
                         # On récupère le lien source
                         source_link = get_source_link(iframe.get('data-src'))
-                        file_name = f"./{video_directory}/{module_title}/{course_directory_title}/{iterateur_video} - {course_title}.mp4"
+                        file_name = f"./{video_directory}/{module_title}/{course_directory_title}/{video_title}"
                         directory = os.listdir(f"{video_directory}/{module_title}/{course_directory_title}/")
 
-                        if f"{course_directory_title}.mp4" not in directory:
+                        print(f"Vidéos in the directory are : {directory}")
+                        if f"{video_title}" not in directory:
 
                             print("Downloading file:%s" % course_directory_title)
 
@@ -132,9 +139,8 @@ def download_video(video_directory):
                             print("%s downloaded!\n" % file_name)
 
                         else:
-                            print(f"Course {iterateur_video} - {course_title}.mp4 already exist")
+                            print(f"Course {video_title} already exist")
 
-                        iterateur_video += 1
 
         session.close()
 
