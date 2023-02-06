@@ -24,11 +24,9 @@ def get_credentials():
 
 def get_course_links():
     with Session() as s:
-        login_crednetials = {"username": "helene.maurice", "password": "LGGmbp2022", "woocommerce-login-nonce": "5686106583", "_wp_http_referer": "/mon-compte/", "login": "Identification"}
-        s.post("https://mescours.modestycouture.com/mon-compte/", login_crednetials)
+        s.post("https://mescours.modestycouture.com/mon-compte/", get_credentials())
         home_page = s.get("https://mescours.modestycouture.com/espace-membre/formation-modesty-couture-class/").content.decode('utf-8')
         soup = BeautifulSoup(home_page, "html.parser")
-        print(home_page)
         # Get all the links in the page
         list = []
         for link in soup.find_all('a'):
@@ -47,6 +45,7 @@ def get_course_links():
         for line in range(len(course_list)):
             f.write(f"{course_list[line]}\n")
 
+        print("Links have been downloaded")
 
 # TEST comment
 def get_file_links():
@@ -63,7 +62,7 @@ def get_file_links():
     return links_list
 
 
-def download_video():
+def download_video(video_directory):
     course_links = get_file_links()
 
     with Session() as session:
@@ -79,10 +78,10 @@ def download_video():
                 module_title = soup.select('h1')[0].text.strip()
 
                 # On vérifie si on doit créer un dossier avec le nom du module
-                directory = os.listdir("./video/")
+                directory = os.listdir(f"{video_directory}/")
                 if module_title not in directory:
                     try:
-                        os.mkdir(f"video/{module_title}/")
+                        os.mkdir(f"{video_directory}/{module_title}/")
                     except OSError as e:
                         print(e)
                 else:
@@ -93,37 +92,49 @@ def download_video():
                 course_page = session.get(course).content.decode('utf-8')
                 soup = BeautifulSoup(course_page, "html.parser")
                 course_title = soup.select('h1')[0].text.strip()
-                i = 0
+
+                iterateur_cours_directory = 0
+                course_directory_title = f"{iterateur_cours_directory} - {course_title}"
+                iterateur_video = 0
                 for iframe in soup.find_all('iframe'):
-                    print(iframe.get('data-src'))
                     if re.search('^https://player.vimeo.com/', iframe.get('data-src')):
 
                         # D'abord on vérifie si le dossier n'existe pas
-                        directory = os.listdir(f"./video/{module_title}/")
-                        if course_title not in directory:
+                        directory = os.listdir(f"{video_directory}/{module_title}/")
+                        if course_directory_title not in directory:
                             try:
-                                os.mkdir(f"video/{module_title}/{course_title}/")
+                                os.mkdir(f"{video_directory}/{module_title}/{course_directory_title}/")
                             except OSError as e:
                                 print(e)
                         else:
-                            print(f"Directory {course_title} already exist")
+                            print(f"Directory {course_directory_title} already exist")
+
+                        # On rajoute une itération pour le dossier cours
+                        iterateur_cours_directory += 1
 
                         # On récupère le lien source
                         source_link = get_source_link(iframe.get('data-src'))
+                        file_name = f"./{video_directory}/{module_title}/{course_directory_title}/{iterateur_video} - {course_title}.mp4"
+                        directory = os.listdir(f"{video_directory}/{module_title}/{course_directory_title}/")
 
-                        file_name = f"./video/{module_title}/{course_title}/{i} - {course_title}.mp4"
-                        print("Downloading file:%s" % file_name)
-                        # create response object
-                        r = session.get(source_link, stream=True)
+                        if f"{course_directory_title}.mp4" not in directory:
 
-                        # download started
-                        with open(file_name, 'wb') as f:
-                            for chunk in r.iter_content(chunk_size=1024 * 1024):
-                                if chunk:
-                                    f.write(chunk)
+                            print("Downloading file:%s" % course_directory_title)
 
-                        print("%s downloaded!\n" % file_name)
-                        i += 1
+                            # create response object
+                            r = session.get(source_link, stream=True)
+
+                            # download started
+                            with open(file_name, 'wb') as f:
+                                for chunk in r.iter_content(chunk_size=1024 * 1024):
+                                    if chunk:
+                                        f.write(chunk)
+                            print("%s downloaded!\n" % file_name)
+
+                        else:
+                            print(f"Course {iterateur_video} - {course_title}.mp4 already exist")
+
+                        iterateur_video += 1
 
         session.close()
 
@@ -148,8 +159,4 @@ def get_source_link(vimeo_link):
                         # Maintenant on ne récupère que le 720p
                         for iterateur in range(len(without_comma)):
                             if re.search("720p", without_comma[iterateur]):
-                                print(without_comma)
                                 return without_comma[2]
-
-
-download_video()
