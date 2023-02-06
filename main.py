@@ -23,7 +23,3 @@ get_links.get_course_links()
 print("DOWNLOADING THE COURSE")
 get_links.download_video(args.destination_directory)
 
-./ main.py - -username
-helene.maurice - -password
-LGGmbp2022 - -destination_directory
-cours
